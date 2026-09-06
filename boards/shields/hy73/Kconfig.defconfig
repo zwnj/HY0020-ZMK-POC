@@ -1,0 +1,19 @@
+if SHIELD_HY73_LEFT
+
+config ZMK_KEYBOARD_NAME
+    default "HY73"
+
+config ZMK_SPLIT_ROLE_CENTRAL
+    default y
+
+config ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS
+    default 1
+
+endif
+
+if SHIELD_HY73_LEFT || SHIELD_HY73_RIGHT
+
+config ZMK_SPLIT
+    default y
+
+endif

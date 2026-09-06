@@ -1,0 +1,9 @@
+if BOARD_HY0020
+
+config BOARD
+    default "hy0020"
+
+config BT_CTLR
+    default BT
+
+endif # BOARD_HY0020

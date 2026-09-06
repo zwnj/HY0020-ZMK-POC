@@ -1,0 +1,46 @@
+/dts-v1/;
+#include <nordic/nrf52832_qfaa.dtsi>
+
+/ {
+    model = "FDK HY0020";
+    compatible = "fdk,hy0020";
+
+    chosen {
+        zephyr,sram = &sram0;
+        zephyr,flash = &flash0;
+        zephyr,code-partition = &code_partition;
+    };
+};
+
+/* P0.09/P0.10 are exposed by HY0020 as NFC/GPIO pins. */
+&uicr {
+    nfct-pins-as-gpios;
+};
+
+&gpiote {
+    status = "okay";
+};
+
+&gpio0 {
+    status = "okay";
+};
+
+&flash0 {
+    partitions {
+        compatible = "fixed-partitions";
+        #address-cells = <1>;
+        #size-cells = <1>;
+
+        /* No bootloader in the PoC: flash directly over SWD. */
+        code_partition: partition@0 {
+            label = "code";
+            reg = <0x00000000 0x00078000>;
+        };
+
+        /* Last 32 KiB reserved for ZMK/Zephyr settings (NVS). */
+        storage_partition: partition@78000 {
+            label = "storage";
+            reg = <0x00078000 0x00008000>;
+        };
+    };
+};

@@ -1,0 +1,3 @@
+config BOARD_HY0020
+    bool "FDK HY0020"
+    depends on SOC_NRF52832_QFAA
