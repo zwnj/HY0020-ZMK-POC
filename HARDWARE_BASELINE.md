@@ -19,8 +19,8 @@ The module should be removable. The keyboard PCB therefore uses a low-profile 20
 Placement goal:
 
 - Keep the PCB outline within the key outline as much as practical.
-- Use hot-swap socket orientation (180 deg first, 90/270 deg only where useful) to create an electronics pocket below the key field.
-- Keep the AE-HY0020-DIP and battery within the key-field footprint.
+- Use hot-swap socket orientation (180 deg first, 90/270 deg only where useful) to create a central electronics pocket below the key field.
+- Reserve that central electronics pocket for the AE-HY0020-DIP and its surrounding electronics; the battery does not need to occupy this pocket.
 - Verify vertical clearance in 3D before PCB release.
 
 ## Switches
@@ -42,7 +42,11 @@ Preferred common battery candidate for LEFT, RIGHT and NUMPAD:
 - JST ZH-series 3-pin plug (ZHR-3): + / NTC / -.
 - Replaceable battery; use a mating keyed 3-pin board connector and explicitly verify polarity.
 
-This battery is preferred over the earlier 500 mAh target because the 4.6 mm thickness is more useful for a low-profile keyboard while still increasing capacity. It is also sold through Japanese electronics distributors.
+Battery placement is independent of the central electronics pocket. The preferred mechanical concept is to mount the flat pouch cell below the keyboard PCB in a dedicated bottom-case cavity, positioned wherever there is sufficient vertical clearance and mechanical protection. It may extend under multiple key positions as long as it does not interfere with hot-swap sockets, stabilizers, fasteners, pogo hardware, or the AE-HY0020 antenna region.
+
+Do not place screws, sharp solder tails, socket pins, or unsupported PCB features directly against the LiPo pouch. Provide a rigid floor or tray plus electrical insulation between the battery and PCB hardware. Avoid placing the LiPo directly below the HY0020 antenna unless RF testing confirms that the pouch cell does not materially degrade performance.
+
+This battery is preferred over the earlier 500 mAh target because the 4.6 mm thickness is useful for a low-profile keyboard while still increasing capacity. It is also sold through Japanese electronics distributors.
 
 The nPM1100 supports battery thermal protection through its NTC pin and is designed around a 10 kOhm battery thermistor. Before PCB release, verify the exact thermistor B-constant in the selected battery against the nPM1100 requirement. The PCB should provide an assembly option so the nPM1100 NTC input can use either the pack NTC or the manufacturer's recommended fixed-resistor fallback, but never both at once.
 
@@ -147,7 +151,8 @@ Keep custom ZMK work minimal:
 ## Items still requiring physical validation
 
 - AE-HY0020-DIP/socket height versus hot-swap sockets and bottom case.
-- DTP443442(NTC) 44 x 35 x 4.6 mm placement versus sockets, stabilizers and enclosure.
+- Battery cavity location and 44 x 35 x 4.6 mm clearance under the PCB.
+- Separation of the LiPo pouch from sharp hardware and the HY0020 antenna region.
 - Exact battery NTC B-constant compatibility with nPM1100.
 - RF performance with the chosen plate/case materials.
 - Deep-sleep and wake behavior with Studio + split central.
