@@ -27,22 +27,22 @@ jobs:
                       board: hy0020
                       shield: hy73_right
                       cmake_args: ""
-                    - name: hy0020-left-studio-max17262
+                    - name: hy0020-left-studio-bq274xx
                       board: hy0020
                       shield: hy73_left
-                      cmake_args: -DCONFIG_ZMK_STUDIO=y -DEXTRA_DTC_OVERLAY_FILE=${GITHUB_WORKSPACE}/config/features/max17262.compiletest.overlay
-                    - name: hy0020-right-max17262
+                      cmake_args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_BQ274XX_PM=n -DEXTRA_DTC_OVERLAY_FILE=${GITHUB_WORKSPACE}/config/features/bq274xx.compiletest.overlay
+                    - name: hy0020-right-bq274xx
                       board: hy0020
                       shield: hy73_right
-                      cmake_args: -DEXTRA_DTC_OVERLAY_FILE=${GITHUB_WORKSPACE}/config/features/max17262.compiletest.overlay
+                      cmake_args: -DCONFIG_BQ274XX_PM=n -DEXTRA_DTC_OVERLAY_FILE=${GITHUB_WORKSPACE}/config/features/bq274xx.compiletest.overlay
                     - name: hy0020-left-studio-status-peripherals
                       board: hy0020
                       shield: hy73_left
-                      cmake_args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_LED=y -DEXTRA_DTC_OVERLAY_FILE=${GITHUB_WORKSPACE}/config/features/status-peripherals.compiletest.overlay
+                      cmake_args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_LED=y -DCONFIG_BQ274XX_PM=n -DEXTRA_DTC_OVERLAY_FILE=${GITHUB_WORKSPACE}/config/features/status-peripherals.compiletest.overlay
                     - name: hy0020-right-status-peripherals
                       board: hy0020
                       shield: hy73_right
-                      cmake_args: -DCONFIG_LED=y -DEXTRA_DTC_OVERLAY_FILE=${GITHUB_WORKSPACE}/config/features/status-peripherals.compiletest.overlay
+                      cmake_args: -DCONFIG_LED=y -DCONFIG_BQ274XX_PM=n -DEXTRA_DTC_OVERLAY_FILE=${GITHUB_WORKSPACE}/config/features/status-peripherals.compiletest.overlay
                     - name: nrf52dk-left-studio-reference
                       board: nrf52dk/nrf52832
                       shield: hy73_left
