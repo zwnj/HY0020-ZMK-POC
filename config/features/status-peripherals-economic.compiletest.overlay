@@ -1,0 +1,40 @@
+/*
+ * JLCPCB Economic-oriented compile-time integration test:
+ * TI BQ27421/BQ27427 fuel gauge + NXP PCA9633 RGB status driver.
+ *
+ * PCA9633 channels:
+ *   LED0 -> Red
+ *   LED1 -> Green
+ *   LED2 -> Blue
+ * LED3 is unused/reserved.
+ *
+ * Battery parameters are representative PoC values only and MUST be replaced
+ * with values for the selected cell/charger before hardware use.
+ */
+
+/ {
+    chosen {
+        zmk,battery = &fuel_gauge;
+    };
+};
+
+&i2c0 {
+    fuel_gauge: bq274xx@55 {
+        compatible = "ti,bq274xx";
+        reg = <0x55>;
+        status = "okay";
+
+        design-voltage = <3700>;
+        design-capacity = <1000>;
+        taper-current = <100>;
+        terminate-voltage = <3300>;
+        zephyr,lazy-load;
+    };
+
+    status_led_driver: pca9633@62 {
+        compatible = "nxp,pca9633";
+        reg = <0x62>;
+        status = "okay";
+        disable-allcall;
+    };
+};
