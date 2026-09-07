@@ -55,6 +55,10 @@ jobs:
                       board: hy0020
                       shield: hy73_right
                       cmake_args: -DCONFIG_LED=y -DCONFIG_BQ274XX_PM=n -DCONFIG_HY_STATUS=y -DEXTRA_DTC_OVERLAY_FILE=${GITHUB_WORKSPACE}/config/features/status-peripherals.compiletest.overlay
+                    - name: hy0020-numpad-studio-full-status
+                      board: hy0020
+                      shield: hynumpad
+                      cmake_args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_LED=y -DCONFIG_BQ274XX_PM=n -DCONFIG_HY_STATUS=y -DEXTRA_DTC_OVERLAY_FILE=${GITHUB_WORKSPACE}/config/features/status-peripherals.compiletest.overlay
                     - name: nrf52dk-left-studio-reference
                       board: nrf52dk/nrf52832
                       shield: hy73_left
