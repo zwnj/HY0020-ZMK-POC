@@ -1,0 +1,12 @@
+if SHIELD_HYNUMPAD
+
+config ZMK_KEYBOARD_NAME
+    default "HY NumPad"
+
+config ZMK_BLE
+    default y
+
+config ZMK_BATTERY_REPORTING
+    default y
+
+endif
