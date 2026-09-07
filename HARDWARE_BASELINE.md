@@ -31,15 +31,22 @@ Placement goal:
 
 ## Battery
 
-Initial common battery target for LEFT, RIGHT and NUMPAD:
+Preferred common battery candidate for LEFT, RIGHT and NUMPAD:
 
+- DATA POWER DTP443442(NTC).
 - 1-cell LiPo, nominal 3.7 V.
-- Approximately 500 mAh.
-- Protected cell preferred.
-- Japanese domestic availability and traceable safety documentation are selection priorities.
-- Battery should be replaceable via a keyed 2-pin connector with explicitly verified polarity.
+- 640 mAh.
+- Approx. 44 x 35 x 4.6 mm.
+- Built-in overcharge, over-discharge and over-current protection.
+- Integrated 10 kOhm NTC thermistor.
+- JST ZH-series 3-pin plug (ZHR-3): + / NTC / -.
+- Replaceable battery; use a mating keyed 3-pin board connector and explicitly verify polarity.
 
-500 mAh is the starting point to maximize part commonality. LEFT can be increased later if real measured runtime justifies it.
+This battery is preferred over the earlier 500 mAh target because the 4.6 mm thickness is more useful for a low-profile keyboard while still increasing capacity. It is also sold through Japanese electronics distributors.
+
+The nPM1100 supports battery thermal protection through its NTC pin and is designed around a 10 kOhm battery thermistor. Before PCB release, verify the exact thermistor B-constant in the selected battery against the nPM1100 requirement. The PCB should provide an assembly option so the nPM1100 NTC input can use either the pack NTC or the manufacturer's recommended fixed-resistor fallback, but never both at once.
+
+Use the same battery in all three units initially for part commonality. Change LEFT capacity only if measured runtime later justifies it.
 
 ## Power management
 
@@ -50,6 +57,7 @@ Target configuration:
 - 1-cell LiPo charger.
 - 3.0 V buck output for AE-HY0020-DIP and peripherals.
 - About 100 mA charge current as the starting point.
+- Use the battery-pack NTC for charger thermal protection if its thermistor curve is verified compatible.
 - USB-C is power/charging only; no USB data is required by HY0020.
 
 Each unit has its own LiPo and nPM1100.
@@ -66,7 +74,7 @@ Reasons:
 - No custom ZMK fuel-gauge adapter should be required.
 - Shared I2C bus with the RGB driver.
 
-Final design-capacity, taper-current and terminate-voltage values must be matched to the actual selected LiPo before hardware release.
+Final design-capacity, taper-current and terminate-voltage values must be matched to the actual selected LiPo before hardware release. The current design-capacity target is 640 mAh if DTP443442(NTC) is retained.
 
 ## RGB status
 
@@ -120,6 +128,7 @@ Preferred production path:
 - JLCPCB Economic PCBA wherever possible.
 - AE-HY0020-DIP installed after PCBA because the module itself is not required to be SMT-assembled by JLCPCB.
 - Low-profile DIP socket for the AE-HY0020-DIP is through-hole/manual assembly.
+- Battery connector may also be manually installed if the preferred JST ZH mating header is not economical for PCBA.
 - Prefer 0603 passives unless space forces smaller parts.
 - Keep all SMT components on one assembly side when possible to stay compatible with Economic assembly constraints.
 
@@ -138,9 +147,11 @@ Keep custom ZMK work minimal:
 ## Items still requiring physical validation
 
 - AE-HY0020-DIP/socket height versus hot-swap sockets and bottom case.
+- DTP443442(NTC) 44 x 35 x 4.6 mm placement versus sockets, stabilizers and enclosure.
+- Exact battery NTC B-constant compatibility with nPM1100.
 - RF performance with the chosen plate/case materials.
 - Deep-sleep and wake behavior with Studio + split central.
 - Battery current and real runtime.
 - Pogo voltage drop and contact reliability.
-- Final LiPo dimensions, connector and polarity.
+- Final battery connector orientation and polarity.
 - Final JLCPCB/LCSC availability immediately before ordering.
