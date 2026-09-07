@@ -108,6 +108,16 @@ jobs:
                       ${{ matrix.cmake_args }} \
                       2>&1 | tee "${BUILD_DIR}/build.log"
 
+            - name: Preserve build log
+              if: always()
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  mkdir -p "${BUILD_DIR}/reports"
+                  if [ -f "${BUILD_DIR}/build.log" ]; then
+                      cp "${BUILD_DIR}/build.log" "${BUILD_DIR}/reports/build.log"
+                  fi
+
             - name: Generate machine-readable memory report
               shell: bash
               run: |
@@ -127,12 +137,12 @@ jobs:
                   cp "${BUILD_DIR}/zephyr/.config" "${BUILD_DIR}/reports/kconfig.txt"
                   cp "${BUILD_DIR}/zephyr/zephyr.dts" "${BUILD_DIR}/reports/zephyr.dts"
                   cp "${BUILD_DIR}/zephyr/zmk.elf" "${BUILD_DIR}/reports/zmk.elf"
-                  cp "${BUILD_DIR}/build.log" "${BUILD_DIR}/reports/build.log"
                   find "${BUILD_DIR}/zephyr" -maxdepth 1 -type f \
                       \( -name '*.map' -o -name '*.lst' \) \
                       -exec cp {} "${BUILD_DIR}/reports/" \;
 
             - name: Upload memory diagnostics
+              if: always()
               uses: actions/upload-artifact@v4
               with:
                   name: memory-${{ matrix.name }}
