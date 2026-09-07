@@ -4,6 +4,7 @@ config HY_STATUS
     bool "HY0020 RGB status manager"
     default n
     depends on LED
+    depends on ZMK_BATTERY_REPORTING
     help
       Small external ZMK listener that maps standard ZMK battery and
       connection events to a Zephyr LED API RGB status LED. It does not patch
