@@ -9,11 +9,27 @@ config ZMK_SPLIT_ROLE_CENTRAL
 config ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS
     default 1
 
+# LEFT is the host-facing BLE HID keyboard as well as the split central.
+config ZMK_BLE
+    default y
+
+# Fetch and proxy RIGHT battery level using ZMK's standard split support.
+config ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_FETCHING
+    default y
+
+config ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_PROXY
+    default y
+
 endif
 
 if SHIELD_HY73_LEFT || SHIELD_HY73_RIGHT
 
 config ZMK_SPLIT
+    default y
+
+# RIGHT does not enable host BLE HID, so explicitly keep local battery
+# reporting enabled for the split battery service/events.
+config ZMK_BATTERY_REPORTING
     default y
 
 endif
