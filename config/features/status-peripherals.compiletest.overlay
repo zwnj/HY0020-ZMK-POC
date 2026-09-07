@@ -1,10 +1,12 @@
 /*
  * Compile-time integration test for the proposed shared status peripherals:
- * MAX17262 fuel gauge + PCA9633 RGB LED driver on one I2C bus.
+ * TI BQ27421/BQ27427-family fuel gauge + NCP5623 RGB LED driver on one I2C bus.
  *
  * Battery parameters are representative PoC values only and MUST be replaced
  * with values for the selected cell/charger before hardware use.
  */
+
+#include <zephyr/dt-bindings/led/led.h>
 
 / {
     chosen {
@@ -13,24 +15,29 @@
 };
 
 &i2c0 {
-    fuel_gauge: max17262@36 {
-        compatible = "maxim,max17262";
-        reg = <0x36>;
+    fuel_gauge: bq274xx@55 {
+        compatible = "ti,bq274xx";
+        reg = <0x55>;
         status = "okay";
 
         design-voltage = <3700>;
-        desired-voltage = <4200>;
-        desired-charging-current = <500>;
-        design-cap = <1000>;
-        empty-voltage = <3300>;
-        recovery-voltage = <3880>;
-        charge-voltage = <4200>;
+        design-capacity = <1000>;
+        taper-current = <100>;
+        terminate-voltage = <3300>;
+        zephyr,lazy-load;
     };
 
-    status_led: pca9633@62 {
-        compatible = "nxp,pca9633";
-        reg = <0x62>;
-        disable-allcall;
+    status_led: ncp5623@39 {
+        compatible = "onnn,ncp5623";
+        reg = <0x39>;
         status = "okay";
+
+        rgb_status: led_0 {
+            label = "RGB Status";
+            index = <0>;
+            color-mapping = <LED_COLOR_ID_RED>,
+                            <LED_COLOR_ID_GREEN>,
+                            <LED_COLOR_ID_BLUE>;
+        };
     };
 };
