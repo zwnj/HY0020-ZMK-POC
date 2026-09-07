@@ -1,0 +1,28 @@
+/*
+ * Compile-time integration test for the TI BQ27421/BQ27427 family.
+ *
+ * IMPORTANT: Battery parameters below are representative PoC values only.
+ * They MUST be replaced with the selected cell and charger parameters before
+ * hardware use. This overlay proves direct compatibility with ZMK's standard
+ * Sensor-API battery reporting; no ZMK battery adapter is required.
+ */
+
+/ {
+    chosen {
+        zmk,battery = &fuel_gauge;
+    };
+};
+
+&i2c0 {
+    fuel_gauge: bq274xx@55 {
+        compatible = "ti,bq274xx";
+        reg = <0x55>;
+        status = "okay";
+
+        design-voltage = <3700>;
+        design-capacity = <1000>;
+        taper-current = <100>;
+        terminate-voltage = <3300>;
+        zephyr,lazy-load;
+    };
+};
