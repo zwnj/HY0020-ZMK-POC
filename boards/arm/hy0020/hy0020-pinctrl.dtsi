@@ -1,0 +1,23 @@
+/*
+ * FDK HY0020 pin control
+ *
+ * P0.28/P0.30 are the only two GPIOs left on the RIGHT half after the
+ * 5x9 key matrix, so reserve them as the shared low-speed I2C bus.
+ */
+
+&pinctrl {
+    i2c0_default: i2c0_default {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 0, 28)>,
+                    <NRF_PSEL(TWIM_SCL, 0, 30)>;
+        };
+    };
+
+    i2c0_sleep: i2c0_sleep {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 0, 28)>,
+                    <NRF_PSEL(TWIM_SCL, 0, 30)>;
+            low-power-enable;
+        };
+    };
+};
