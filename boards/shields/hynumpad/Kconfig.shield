@@ -1,0 +1,2 @@
+config SHIELD_HYNUMPAD
+    def_bool $(shields_list_contains,hynumpad)
