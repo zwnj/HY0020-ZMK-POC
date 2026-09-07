@@ -1,6 +1,8 @@
 manifest:
     defaults:
-        revision: main
+        # Known-good ZMK main commit validated by this PoC on 2026-09-07.
+        # The compatibility workflow separately checks the moving main branch.
+        revision: 641514a97db345f499dd50b0360e594270f008fe
     remotes:
         - name: zmkfirmware
           url-base: https://github.com/zmkfirmware
