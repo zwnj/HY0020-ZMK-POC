@@ -1,0 +1,30 @@
+/*
+ * Compile-time integration test for the MAX17262 fuel gauge.
+ *
+ * IMPORTANT: Battery parameters below are representative PoC values only.
+ * They MUST be replaced with the selected cell/charger parameters before
+ * hardware use. This overlay exists to prove the ZMK/Zephyr integration and
+ * measure its Flash/RAM cost without adding a custom battery driver.
+ */
+
+/ {
+    chosen {
+        zmk,battery = &fuel_gauge;
+    };
+};
+
+&i2c0 {
+    fuel_gauge: max17262@36 {
+        compatible = "maxim,max17262";
+        reg = <0x36>;
+        status = "okay";
+
+        design-voltage = <3700>;
+        desired-voltage = <4200>;
+        desired-charging-current = <500>;
+        design-cap = <1000>;
+        empty-voltage = <3300>;
+        recovery-voltage = <3880>;
+        charge-voltage = <4200>;
+    };
+};
