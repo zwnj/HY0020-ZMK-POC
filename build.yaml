@@ -9,14 +9,12 @@ include:
       shield: hy73_right
       artifact-name: hy73_right
 
-    # Reference builds use Nordic's nRF52 DK target with the same nRF52832
-    # memory size. They help distinguish custom-board-definition errors from
-    # shield/ZMK errors during the first CI run.
-    - board: nrf52dk_nrf52832
+    # Zephyr 4.1 Hardware Model v2 uses board/SoC qualifiers.
+    - board: nrf52dk/nrf52832
       shield: hy73_left
       cmake-args: -DCONFIG_ZMK_STUDIO=y
       artifact-name: nrf52dk_hy73_left_studio_reference
 
-    - board: nrf52dk_nrf52832
+    - board: nrf52dk/nrf52832
       shield: hy73_right
       artifact-name: nrf52dk_hy73_right_reference
