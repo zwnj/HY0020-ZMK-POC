@@ -1,0 +1,36 @@
+/*
+ * Compile-time integration test for the proposed shared status peripherals:
+ * MAX17262 fuel gauge + PCA9633 RGB LED driver on one I2C bus.
+ *
+ * Battery parameters are representative PoC values only and MUST be replaced
+ * with values for the selected cell/charger before hardware use.
+ */
+
+/ {
+    chosen {
+        zmk,battery = &fuel_gauge;
+    };
+};
+
+&i2c0 {
+    fuel_gauge: max17262@36 {
+        compatible = "maxim,max17262";
+        reg = <0x36>;
+        status = "okay";
+
+        design-voltage = <3700>;
+        desired-voltage = <4200>;
+        desired-charging-current = <500>;
+        design-cap = <1000>;
+        empty-voltage = <3300>;
+        recovery-voltage = <3880>;
+        charge-voltage = <4200>;
+    };
+
+    status_led: pca9633@62 {
+        compatible = "nxp,pca9633";
+        reg = <0x62>;
+        disable-allcall;
+        status = "okay";
+    };
+};
