@@ -1,0 +1,4 @@
+# FDK HY0020 board configuration
+
+config BOARD_HY0020
+    select SOC_NRF52832_QFAA
