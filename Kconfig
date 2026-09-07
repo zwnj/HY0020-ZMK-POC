@@ -1,0 +1,26 @@
+menu "HY0020 PoC helpers"
+
+config HY_STATUS
+    bool "HY0020 RGB status manager"
+    default n
+    depends on LED
+    help
+      Small external ZMK listener that maps standard ZMK battery and
+      connection events to a Zephyr LED API RGB status LED. It does not patch
+      ZMK core or implement a custom transport/driver.
+
+if HY_STATUS
+
+config HY_STATUS_LOW_BATTERY
+    int "Low battery threshold (%)"
+    range 1 99
+    default 15
+
+config HY_STATUS_CRITICAL_BATTERY
+    int "Critical battery threshold (%)"
+    range 1 99
+    default 5
+
+endif
+
+endmenu
