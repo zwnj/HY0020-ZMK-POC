@@ -36,7 +36,7 @@ jobs:
                   build_dir="${RUNNER_TEMP}/build-current-${{ matrix.name }}"
                   mkdir -p "${base_dir}/config" "${build_dir}"
                   cp -R config/. "${base_dir}/config/"
-                  sed -i 's/revision: v0.3/revision: main/' "${base_dir}/config/west.yml"
+                  sed -i 's/revision: 641514a97db345f499dd50b0360e594270f008fe/revision: main/' "${base_dir}/config/west.yml"
                   echo "BASE_DIR=${base_dir}" >> "${GITHUB_ENV}"
                   echo "BUILD_DIR=${build_dir}" >> "${GITHUB_ENV}"
 
