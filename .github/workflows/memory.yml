@@ -1,0 +1,105 @@
+name: Measure ZMK memory
+
+on:
+    push:
+        paths:
+            - ".github/workflows/memory.yml"
+            - "boards/**"
+            - "config/**"
+            - "tools/**"
+            - "build.yaml"
+    workflow_dispatch:
+
+jobs:
+    measure:
+        runs-on: ubuntu-latest
+        container:
+            image: zmkfirmware/zmk-build-arm:stable
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - name: hy0020-left-studio
+                      board: hy0020
+                      shield: hy73_left
+                      cmake_args: -DCONFIG_ZMK_STUDIO=y
+                    - name: hy0020-right
+                      board: hy0020
+                      shield: hy73_right
+                      cmake_args: ""
+                    - name: nrf52dk-left-studio-reference
+                      board: nrf52dk_nrf52832
+                      shield: hy73_left
+                      cmake_args: -DCONFIG_ZMK_STUDIO=y
+                    - name: nrf52dk-right-reference
+                      board: nrf52dk_nrf52832
+                      shield: hy73_right
+                      cmake_args: ""
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Prepare isolated west workspace
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  base_dir="${RUNNER_TEMP}/zmk-config-${{ matrix.name }}"
+                  build_dir="${RUNNER_TEMP}/build-${{ matrix.name }}"
+                  mkdir -p "${base_dir}/config" "${build_dir}"
+                  cp -R config/. "${base_dir}/config/"
+                  echo "BASE_DIR=${base_dir}" >> "${GITHUB_ENV}"
+                  echo "BUILD_DIR=${build_dir}" >> "${GITHUB_ENV}"
+
+            - name: West init and update
+              shell: bash
+              working-directory: ${{ env.BASE_DIR }}
+              run: |
+                  set -euo pipefail
+                  west init -l "${BASE_DIR}/config"
+                  west update --fetch-opt=--filter=tree:0
+                  west zephyr-export
+
+            - name: Build and capture linker memory summary
+              shell: bash
+              working-directory: ${{ env.BASE_DIR }}
+              run: |
+                  set -euo pipefail
+                  west build \
+                      -s zmk/app \
+                      -d "${BUILD_DIR}" \
+                      -b "${{ matrix.board }}" \
+                      -- \
+                      -DZMK_CONFIG="${BASE_DIR}/config" \
+                      -DSHIELD="${{ matrix.shield }}" \
+                      -DZMK_EXTRA_MODULES="${GITHUB_WORKSPACE}" \
+                      ${{ matrix.cmake_args }} \
+                      2>&1 | tee "${BUILD_DIR}/build.log"
+
+            - name: Generate machine-readable memory report
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  mkdir -p "${BUILD_DIR}/reports"
+                  python3 "${GITHUB_WORKSPACE}/tools/memory_report.py" \
+                      "${BUILD_DIR}/build.log" \
+                      --name "${{ matrix.name }}" \
+                      --json "${BUILD_DIR}/reports/memory.json" \
+                      --markdown "${BUILD_DIR}/reports/memory.md"
+                  cat "${BUILD_DIR}/reports/memory.md" >> "${GITHUB_STEP_SUMMARY}"
+
+            - name: Preserve diagnostic outputs
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  cp "${BUILD_DIR}/zephyr/.config" "${BUILD_DIR}/reports/kconfig.txt"
+                  cp "${BUILD_DIR}/zephyr/zephyr.dts" "${BUILD_DIR}/reports/zephyr.dts"
+                  cp "${BUILD_DIR}/zephyr/zephyr.elf" "${BUILD_DIR}/reports/zephyr.elf"
+                  cp "${BUILD_DIR}/zephyr/zephyr.map" "${BUILD_DIR}/reports/zephyr.map"
+                  cp "${BUILD_DIR}/build.log" "${BUILD_DIR}/reports/build.log"
+
+            - name: Upload memory diagnostics
+              uses: actions/upload-artifact@v4
+              with:
+                  name: memory-${{ matrix.name }}
+                  path: ${{ env.BUILD_DIR }}/reports
