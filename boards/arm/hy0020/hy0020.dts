@@ -1,5 +1,6 @@
 /dts-v1/;
 #include <nordic/nrf52832_qfaa.dtsi>
+#include "hy0020-pinctrl.dtsi"
 
 / {
     model = "FDK HY0020";
@@ -23,6 +24,15 @@
 
 &gpio0 {
     status = "okay";
+};
+
+/* Shared peripheral bus: P0.28=SDA, P0.30=SCL. */
+&i2c0 {
+    status = "okay";
+    pinctrl-0 = <&i2c0_default>;
+    pinctrl-1 = <&i2c0_sleep>;
+    pinctrl-names = "default", "sleep";
+    clock-frequency = <I2C_BITRATE_STANDARD>;
 };
 
 &flash0 {
