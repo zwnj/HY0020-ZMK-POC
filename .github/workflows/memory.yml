@@ -94,9 +94,11 @@ jobs:
                   set -euo pipefail
                   cp "${BUILD_DIR}/zephyr/.config" "${BUILD_DIR}/reports/kconfig.txt"
                   cp "${BUILD_DIR}/zephyr/zephyr.dts" "${BUILD_DIR}/reports/zephyr.dts"
-                  cp "${BUILD_DIR}/zephyr/zephyr.elf" "${BUILD_DIR}/reports/zephyr.elf"
-                  cp "${BUILD_DIR}/zephyr/zephyr.map" "${BUILD_DIR}/reports/zephyr.map"
+                  cp "${BUILD_DIR}/zephyr/zmk.elf" "${BUILD_DIR}/reports/zmk.elf"
                   cp "${BUILD_DIR}/build.log" "${BUILD_DIR}/reports/build.log"
+                  find "${BUILD_DIR}/zephyr" -maxdepth 1 -type f \
+                      \( -name '*.map' -o -name '*.lst' \) \
+                      -exec cp {} "${BUILD_DIR}/reports/" \;
 
             - name: Upload memory diagnostics
               uses: actions/upload-artifact@v4
