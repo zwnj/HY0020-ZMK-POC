@@ -14,6 +14,10 @@ on:
             - "build.yaml"
     workflow_dispatch:
 
+concurrency:
+    group: memory-${{ github.ref }}
+    cancel-in-progress: true
+
 jobs:
     measure:
         runs-on: ubuntu-latest
@@ -23,30 +27,6 @@ jobs:
             fail-fast: false
             matrix:
                 include:
-                    - name: hy0020-left-studio
-                      board: hy0020
-                      shield: hy73_left
-                      cmake_args: -DCONFIG_ZMK_STUDIO=y
-                    - name: hy0020-right
-                      board: hy0020
-                      shield: hy73_right
-                      cmake_args: ""
-                    - name: hy0020-left-studio-bq274xx
-                      board: hy0020
-                      shield: hy73_left
-                      cmake_args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_BQ274XX_PM=n -DEXTRA_DTC_OVERLAY_FILE=${GITHUB_WORKSPACE}/config/features/bq274xx.compiletest.overlay
-                    - name: hy0020-right-bq274xx
-                      board: hy0020
-                      shield: hy73_right
-                      cmake_args: -DCONFIG_BQ274XX_PM=n -DEXTRA_DTC_OVERLAY_FILE=${GITHUB_WORKSPACE}/config/features/bq274xx.compiletest.overlay
-                    - name: hy0020-left-studio-status-peripherals
-                      board: hy0020
-                      shield: hy73_left
-                      cmake_args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_LED=y -DCONFIG_BQ274XX_PM=n -DEXTRA_DTC_OVERLAY_FILE=${GITHUB_WORKSPACE}/config/features/status-peripherals.compiletest.overlay
-                    - name: hy0020-right-status-peripherals
-                      board: hy0020
-                      shield: hy73_right
-                      cmake_args: -DCONFIG_LED=y -DCONFIG_BQ274XX_PM=n -DEXTRA_DTC_OVERLAY_FILE=${GITHUB_WORKSPACE}/config/features/status-peripherals.compiletest.overlay
                     - name: hy0020-left-studio-full-status
                       board: hy0020
                       shield: hy73_left
@@ -59,14 +39,6 @@ jobs:
                       board: hy0020
                       shield: hynumpad
                       cmake_args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_LED=y -DCONFIG_BQ274XX_PM=n -DCONFIG_HY_STATUS=y -DEXTRA_DTC_OVERLAY_FILE=${GITHUB_WORKSPACE}/config/features/status-peripherals.compiletest.overlay
-                    - name: nrf52dk-left-studio-reference
-                      board: nrf52dk/nrf52832
-                      shield: hy73_left
-                      cmake_args: -DCONFIG_ZMK_STUDIO=y
-                    - name: nrf52dk-right-reference
-                      board: nrf52dk/nrf52832
-                      shield: hy73_right
-                      cmake_args: ""
 
         steps:
             - name: Checkout
