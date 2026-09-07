@@ -6,6 +6,10 @@ on:
             - ".github/workflows/memory.yml"
             - "boards/**"
             - "config/**"
+            - "src/**"
+            - "Kconfig"
+            - "CMakeLists.txt"
+            - "zephyr/module.yml"
             - "tools/**"
             - "build.yaml"
     workflow_dispatch:
@@ -43,6 +47,14 @@ jobs:
                       board: hy0020
                       shield: hy73_right
                       cmake_args: -DCONFIG_LED=y -DCONFIG_BQ274XX_PM=n -DEXTRA_DTC_OVERLAY_FILE=${GITHUB_WORKSPACE}/config/features/status-peripherals.compiletest.overlay
+                    - name: hy0020-left-studio-full-status
+                      board: hy0020
+                      shield: hy73_left
+                      cmake_args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_LED=y -DCONFIG_BQ274XX_PM=n -DCONFIG_HY_STATUS=y -DEXTRA_DTC_OVERLAY_FILE=${GITHUB_WORKSPACE}/config/features/status-peripherals.compiletest.overlay
+                    - name: hy0020-right-full-status
+                      board: hy0020
+                      shield: hy73_right
+                      cmake_args: -DCONFIG_LED=y -DCONFIG_BQ274XX_PM=n -DCONFIG_HY_STATUS=y -DEXTRA_DTC_OVERLAY_FILE=${GITHUB_WORKSPACE}/config/features/status-peripherals.compiletest.overlay
                     - name: nrf52dk-left-studio-reference
                       board: nrf52dk/nrf52832
                       shield: hy73_left
