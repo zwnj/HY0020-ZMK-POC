@@ -1,0 +1,59 @@
+/dts-v1/;
+#include <nordic/nrf52833_qiaa.dtsi>
+#include "anna_b402-pinctrl.dtsi"
+
+/ {
+    model = "u-blox ANNA-B402";
+    compatible = "u-blox,anna-b402";
+
+    chosen {
+        zephyr,sram = &sram0;
+        zephyr,flash = &flash0;
+        zephyr,code-partition = &code_partition;
+    };
+};
+
+&gpiote {
+    status = "okay";
+};
+
+&gpio0 {
+    status = "okay";
+};
+
+&gpio1 {
+    status = "okay";
+};
+
+&i2c0 {
+    status = "okay";
+    pinctrl-0 = <&i2c0_default>;
+    pinctrl-1 = <&i2c0_sleep>;
+    pinctrl-names = "default", "sleep";
+    clock-frequency = <I2C_BITRATE_STANDARD>;
+};
+
+/* ANNA-B402 exposes native nRF52833 USB D+/D- plus a dedicated VBUS pin. */
+zephyr_udc0: &usbd {
+    compatible = "nordic,nrf-usbd";
+    status = "okay";
+};
+
+&flash0 {
+    partitions {
+        compatible = "fixed-partitions";
+        #address-cells = <1>;
+        #size-cells = <1>;
+
+        /* Direct SWD flashing for the PoC, no bootloader required. */
+        code_partition: partition@0 {
+            label = "code";
+            reg = <0x00000000 0x00078000>;
+        };
+
+        storage_partition: partition@78000 {
+            label = "storage";
+            reg = <0x00078000 0x00008000>;
+        };
+    };
+};
