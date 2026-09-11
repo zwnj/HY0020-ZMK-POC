@@ -17,10 +17,12 @@ jobs:
             fail-fast: false
             matrix:
                 include:
-                    - name: hy0020-left-studio
+                    - name: anna-b402-left-studio
+                      board: anna_b402
                       shield: hy73_left
                       cmake_args: -DCONFIG_ZMK_STUDIO=y
-                    - name: hy0020-right
+                    - name: anna-b402-right
+                      board: anna_b402
                       shield: hy73_right
                       cmake_args: ""
 
@@ -57,7 +59,7 @@ jobs:
                   west build \
                       -s zmk/app \
                       -d "${BUILD_DIR}" \
-                      -b hy0020 \
+                      -b "${{ matrix.board }}" \
                       -- \
                       -DZMK_CONFIG="${BASE_DIR}/config" \
                       -DSHIELD="${{ matrix.shield }}" \
