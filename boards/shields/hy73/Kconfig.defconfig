@@ -9,7 +9,10 @@ config ZMK_SPLIT_ROLE_CENTRAL
 config ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS
     default 1
 
-# LEFT is the host-facing BLE HID keyboard as well as the split central.
+# LEFT is host-facing over both USB HID and BLE HID.
+config ZMK_USB
+    default y
+
 config ZMK_BLE
     default y
 
