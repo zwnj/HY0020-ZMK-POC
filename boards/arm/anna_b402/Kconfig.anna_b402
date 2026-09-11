@@ -1,0 +1,4 @@
+# u-blox ANNA-B402 board configuration
+
+config BOARD_ANNA_B402
+    select SOC_NRF52833_QIAA
