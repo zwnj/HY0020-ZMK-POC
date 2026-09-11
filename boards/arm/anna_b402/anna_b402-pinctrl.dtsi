@@ -1,0 +1,23 @@
+/*
+ * u-blox ANNA-B402 pin control
+ *
+ * Use P0.11/P0.12 for the shared I2C bus. These are exposed as
+ * ANNA-B402 GPIO_14/GPIO_15 and are unrestricted general-purpose pins.
+ */
+
+&pinctrl {
+    i2c0_default: i2c0_default {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 0, 11)>,
+                    <NRF_PSEL(TWIM_SCL, 0, 12)>;
+        };
+    };
+
+    i2c0_sleep: i2c0_sleep {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 0, 11)>,
+                    <NRF_PSEL(TWIM_SCL, 0, 12)>;
+            low-power-enable;
+        };
+    };
+};
