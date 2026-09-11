@@ -1,0 +1,6 @@
+board:
+    name: anna_b402
+    full_name: u-blox ANNA-B402
+    vendor: ublox
+    socs:
+        - name: nrf52833
