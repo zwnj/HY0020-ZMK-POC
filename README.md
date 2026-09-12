@@ -42,6 +42,10 @@ Matrix configuration:
 
 The right-side 6 x 8 arrangement is used because one 74HC595 provides eight outputs. The physical key layout remains independent of the electrical matrix through ZMK matrix transforms.
 
+## NumPad hardware block
+
+The NumPad physical layout is intentionally still undecided. The layout-independent HY0020 + 74HC595 block is documented in [`docs/numpad-hardware.md`](docs/numpad-hardware.md). The control interface and PCB placement policy can be fixed now while the final row/column usage, matrix transform, and keymap remain open.
+
 ## Measured memory usage
 
 Measured with the repository's GitHub Actions memory workflow.
