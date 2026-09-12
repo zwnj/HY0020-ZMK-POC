@@ -98,7 +98,7 @@ Divider:
 
 At 4.2 V battery voltage, `VBAT_SENSE` is approximately 2.1 V. Divider current is approximately 2.1 µA while the keyboard is on and zero through this path when the physical switch is off.
 
-Using the same resistor value for both legs keeps the BOM simple and the firmware ratio exact.
+Using the same resistor value for both legs keeps the BOM simple and the firmware ratio exact. The divider has a 500 kΩ Thevenin source resistance. ZMK v0.3's voltage-divider driver configures the nRF52 SAADC for a 40 µs acquisition time, which is the intended baseline for this high-value divider. Final hardware should still be compared against a multimeter and the divider values revisited if real-board accuracy is not adequate.
 
 Do not add a large capacitor from `VBAT_SENSE` to ground by default. A large stored charge on the ADC node can remain briefly after the power switch opens and can complicate power-off behavior. Add filtering only if measurements on the real PCB show that it is necessary.
 
