@@ -15,12 +15,13 @@ The current design direction is ANNA-B402 / nRF52833. HY0020 remains historical 
 - Pogo: power / GND / dock detect only; no key data.
 - ESB: not part of the current baseline; retain only as a possible future latency experiment.
 
-## Current decision documents
+## Current decision / feasibility documents
 
-- [`HARDWARE_BASELINE.md`](HARDWARE_BASELINE.md) — current ANNA-B402 hardware, power, clock, manufacturing, and firmware baseline.
-- [`HOST_CONNECTIVITY_DECISION.md`](HOST_CONNECTIVITY_DECISION.md) — BLE-first host/split architecture, permanent LEFT Central, and Prospector-like BLE-to-USB desktop dongle direction.
-- [`ANNA_B402_JLCPCB_FEASIBILITY.md`](ANNA_B402_JLCPCB_FEASIBILITY.md) — JLCPCB Economic compatibility, prototype quantity, Global Sourcing direction, and manufacturing gate.
-- [`VALIDATION.md`](VALIDATION.md) — ANNA firmware/CI, host-connectivity, and hardware validation plan.
+- [`HARDWARE_BASELINE.md`](HARDWARE_BASELINE.md) — current ANNA-B402 hardware baseline.
+- [`ANNA_B402_HARDWARE_INTEGRATION_FEASIBILITY.md`](ANNA_B402_HARDWARE_INTEGRATION_FEASIBILITY.md) — detailed antenna, reflow, LFXO, USB, SWD, power and one-sided-PCBA feasibility review.
+- [`ANNA_B402_JLCPCB_FEASIBILITY.md`](ANNA_B402_JLCPCB_FEASIBILITY.md) — Global Sourcing, prototype quantity, JLC assembly and procurement gates.
+- [`HOST_CONNECTIVITY_DECISION.md`](HOST_CONNECTIVITY_DECISION.md) — BLE-first split/host architecture and Prospector-like BLE-to-USB desktop dongle direction.
+- [`VALIDATION.md`](VALIDATION.md) — later firmware/CI and system validation plan.
 
 ## Current MCU direction
 
@@ -31,21 +32,25 @@ Key reasons:
 - 512 kB flash / 128 kB RAM.
 - Native USB device support.
 - 33 GPIO.
-- Integrated antenna/RF implementation.
+- Integrated antenna / RF implementation.
 - Compact 6.5 x 6.5 mm module.
-- JLCPCB C6124130 is compatible with Economic PCBA, although sourcing is currently expected to use Global Sourcing rather than public JLC stock.
+- JLCPCB already has C6124130 as an assembly-library part.
 
 The preferred final low-frequency clock direction is an external 32.768 kHz LFXO. Internal LFRC remains useful for bring-up but is not the preferred final low-power configuration.
 
+## Important current hardware gates
+
+ANNA-B402 remains the preferred module, but PCB release is blocked on two items:
+
+1. **Antenna integration** — the integrated antenna should use the u-blox edge/corner reference layout. ANNA itself should therefore sit at a suitable PCB outer edge/corner rather than simply inside the central electronics pocket.
+2. **JLC reflow process** — u-blox specifies ANNA-B4 TP absolute max = 245 °C, while JLC publishes Economic PCBA reflow = 255 ± 5 °C and non-adjustable. C6124130 is listed as Economic compatible, but Economic assembly is not considered cleared until JLC explicitly confirms a compatible thermal process. Standard PCBA (published 240 ± 5 °C) is the current safe fallback.
+
+Global Sourcing remains the preferred procurement route. The first run needs 15 installed modules (5 LEFT + 5 RIGHT + 5 NUMPAD), with roughly 18-20 parts as the working sourcing quantity until final attrition is known. Do not plan to consign loose parts from Japan.
+
 ## Repository migration status
 
-Documentation has been migrated to the ANNA-B402 baseline.
+Documentation is now ANNA-B402-first.
 
-Firmware/build migration is still in progress:
-
-- `boards/arm/anna_b402/` scaffold exists.
-- Native USB and I2C are present in the ANNA board definition.
-- `build.yaml` still contains HY0020 / nRF52832 jobs and must be migrated to explicit `anna_b402` builds.
-- The next meaningful firmware milestone is a clean LEFT + RIGHT ANNA CI build with flash/RAM usage recorded.
+Firmware/build migration is intentionally lower priority than closing the hardware/manufacturing gates above. The `boards/arm/anna_b402/` scaffold exists, but `build.yaml` can be cleaned up after PCB feasibility is settled.
 
 Historical HY0020 work should be treated as reference material, not as the acceptance baseline for `poc/anna-b402`.
