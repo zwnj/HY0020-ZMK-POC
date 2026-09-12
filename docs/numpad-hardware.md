@@ -2,6 +2,8 @@
 
 The NumPad key layout is intentionally not fixed yet. The HY0020 and 74HC595 hardware block can still be fixed now because the shift-register interface does not depend on the final physical key arrangement.
 
+The common battery/regulator/switch/battery-sense circuit is defined separately in [`power-hardware.md`](power-hardware.md) and should also be reused by the NumPad.
+
 ## Fixed architecture
 
 Use the same basic architecture as the keyboard PoC:
@@ -10,8 +12,10 @@ Use the same basic architecture as the keyboard PoC:
 - one 74HC595 for matrix output expansion
 - matrix output columns driven by the 74HC595
 - matrix input rows connected directly to HY0020 GPIOs
+- `P0.30 / AIN6` reserved for the common battery-voltage divider
+- common `VBAT -> switch -> 3.3 V LDO` power block
 - HY0020-DIP installed manually after JLCPCB PCBA
-- 74HC595 and its passive parts assembled by JLCPCB Economic PCBA
+- 74HC595, regulator, and passive parts assembled by JLCPCB Economic PCBA
 
 Do not create the final ZMK matrix transform until the NumPad key layout is known.
 
@@ -78,6 +82,8 @@ For row inputs, reserve the same primary HY0020 GPIO pool used by the current Po
 
 Five direct rows and eight shifted columns already provide electrical capacity for up to 40 matrix positions. The optional sixth row raises that to 48 positions. The physical NumPad layout does not need to resemble this electrical matrix; ZMK matrix transforms can map the final physical ordering later.
 
+`P0.30` is not part of the row pool because it is reserved for battery voltage measurement across all products.
+
 ## PCB placement
 
 Placement priority:
@@ -89,6 +95,7 @@ Placement priority:
 5. Fan Q0-Q7 outward from the 74HC595 toward the switch matrix area.
 6. Do not place the 74HC595 underneath the HY0020-DIP carrier. Keep it accessible for inspection/rework and leave room around the DIP through-hole pads for manual soldering.
 7. Keep a continuous ground reference around the logic section while respecting the HY0020 antenna keepout.
+8. Follow the common power-block placement rules in `power-hardware.md` for the regulator, switch, and battery divider.
 
 There is no benefit to placing the 74HC595 in the center of the key field. The preferred placement is near the MCU; the column traces can then fan out to the matrix.
 
@@ -100,7 +107,8 @@ Do not freeze these items yet:
 - exact row/column count actually used
 - encoder presence or location
 - RGB or indicator LEDs
-- battery/fuel-gauge implementation
+- USB/charging connector and charger IC, if onboard charging is wanted
+- battery connector and physical battery size
 - final matrix transform and keymap
 
-Those decisions can be made later without changing the HY0020-to-74HC595 control interface.
+Those decisions can be made later without changing the HY0020-to-74HC595 control interface or the common regulator/battery-sense topology.

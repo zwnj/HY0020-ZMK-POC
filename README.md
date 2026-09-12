@@ -1,6 +1,6 @@
 # HY0020 ZMK PoC
 
-Proof-of-concept repository for validating HY0020 (nRF52832) as the MCU module for a ZMK split keyboard, including memory headroom and a 74HC595-based matrix-output expansion.
+Proof-of-concept repository for validating HY0020 (nRF52832) as the MCU module for a ZMK split keyboard, including memory headroom, a 74HC595-based matrix-output expansion, and the common battery-sensing path.
 
 ## Why this PoC exists
 
@@ -9,7 +9,8 @@ HY0020 uses nRF52832, which provides 512 KiB Flash and 64 KiB RAM. Compared with
 - BLE split central/peripheral roles
 - ZMK Studio on the central side
 - ZMK/Zephyr settings storage
-- future features such as battery/fuel-gauge support or RGB
+- battery-voltage sensing
+- future features such as RGB
 - a GPIO-expansion scheme for the key matrix
 
 The purpose of this repository is to measure those constraints instead of estimating them from specifications alone.
@@ -42,9 +43,21 @@ Matrix configuration:
 
 The right-side 6 x 8 arrangement is used because one 74HC595 provides eight outputs. The physical key layout remains independent of the electrical matrix through ZMK matrix transforms.
 
+## Common power block
+
+The common battery, power-switch, 3.3 V regulator, and battery-sense topology for the 30-key side, 43-key side, and future NumPad is documented in [`docs/power-hardware.md`](docs/power-hardware.md).
+
+Key decisions:
+
+- a 1-cell LiPo is not connected directly to AE-HY0020-DIP `3V3`
+- `TPS7A0233PDBVR` is the preferred 3.3 V LDO
+- the physical switch is placed between raw `VBAT` and `VBAT_SW`
+- `P0.30 / AIN6` is reserved for battery measurement
+- the baseline divider is 1 MΩ / 1 MΩ, using the same resistor part twice
+
 ## NumPad hardware block
 
-The NumPad physical layout is intentionally still undecided. The layout-independent HY0020 + 74HC595 block is documented in [`docs/numpad-hardware.md`](docs/numpad-hardware.md). The control interface and PCB placement policy can be fixed now while the final row/column usage, matrix transform, and keymap remain open.
+The NumPad physical layout is intentionally still undecided. The layout-independent HY0020 + 74HC595 block is documented in [`docs/numpad-hardware.md`](docs/numpad-hardware.md). The control interface, common power block, and PCB placement policy can be fixed now while the final row/column usage, matrix transform, and keymap remain open.
 
 ## Measured memory usage
 
@@ -62,15 +75,17 @@ Measured with the repository's GitHub Actions memory workflow.
 - Left: +3,996 B Flash, +208 B RAM
 - Right: +3,868 B Flash, +184 B RAM
 
+Battery-voltage sensing has now been added to the PoC using `P0.30 / AIN6`. The memory table should be updated with the new measured values after the corresponding CI run completes.
+
 ## Interpretation
 
 The original risk was not an observed out-of-memory failure. It was uncertainty about whether nRF52832's 64 KiB RAM and 512 KiB Flash would leave enough practical headroom for ZMK.
 
-The measured result is substantially better than the conservative concern:
+The measured result so far is substantially better than the conservative concern:
 
-- The heaviest current build uses about 25% of RAM.
+- The heaviest measured build uses about 25% of RAM.
 - About 49 KiB of RAM remains in the Central + Studio build at link time.
-- Flash usage remains close to 10% even after adding the 74HC595 driver.
+- Flash usage remains close to 10% after adding the 74HC595 driver.
 - The 74HC595 itself has negligible RAM impact in this design.
 
 Therefore memory capacity is not currently a reason to reject HY0020.
@@ -81,21 +96,23 @@ The linker summary does not measure worst-case runtime stack high-water marks, s
 
 Current direction:
 
-- Use HY0020-DIP as the wireless MCU module.
+- Use AE-HY0020-DIP as the wireless MCU module.
 - Assemble the motherboard with JLCPCB Economic PCBA.
-- Install HY0020-DIP after PCBA so the radio module is not exposed to JLCPCB reflow.
+- Install AE-HY0020-DIP after PCBA so the radio module is not exposed to JLCPCB reflow.
 - Use one 74HC595 per keyboard side for matrix column outputs.
 - Keep matrix input rows directly connected to HY0020 GPIOs.
+- Use the shared power/battery block described in `docs/power-hardware.md`.
+- Reserve P0.30 / AIN6 for battery voltage measurement.
 - Do not optimize around MCU-module footprint unless the product requirements change.
 
 ## Remaining validation
 
 Before freezing the production firmware, repeat the memory measurement with every actually planned feature enabled. In particular, add optional features one at a time and compare their deltas, for example:
 
-- battery voltage / fuel-gauge support
 - RGB, if used
 - final keymap behaviors, combos, macros, and Studio configuration
 - any NumPad-specific features
+- any charger/fuel-gauge feature added beyond the baseline voltage divider
 
 The production gate should be based on the final feature-complete build, not only this baseline.
 
