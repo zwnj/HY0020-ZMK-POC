@@ -1,162 +1,258 @@
-# HY0020 Keyboard Hardware Baseline
+# ANNA-B402 Keyboard Hardware Baseline
 
-This file records the current hardware baseline for the split keyboard + standalone numpad design.
+Updated: 2026-09-12
+
+This file records the current hardware baseline for the split keyboard + standalone numpad design on `poc/anna-b402`. HY0020-specific assumptions are historical and are no longer the design target for this branch.
 
 ## System architecture
 
-- LEFT: AE-HY0020-DIP / nRF52832, ZMK Split Central, BLE HID to host PC, ZMK Studio.
-- RIGHT: AE-HY0020-DIP / nRF52832, ZMK Split Peripheral over BLE to LEFT.
-- NUMPAD: AE-HY0020-DIP / nRF52832, standalone BLE HID keyboard, own ZMK Studio/keymap.
-- No USB dongle.
-- Pogo connections carry power/GND/detect only; no key data.
+Physical order:
+
+```text
+NUMPAD <-> LEFT / CENTRAL <-> RIGHT
+```
+
+Logical roles:
+
+- LEFT: ANNA-B402 / nRF52833, permanent ZMK Split Central.
+- RIGHT: ANNA-B402 / nRF52833, ZMK Split Peripheral over standard BLE to LEFT.
+- NUMPAD: ANNA-B402 / nRF52833, standalone ZMK keyboard rather than a third Split Peripheral.
+- Pogo connections carry power, GND, and dock-detect signals only. Do not transport key data over pogo.
+
+Host paths:
+
+```text
+RIGHT -- ZMK BLE Split --> LEFT -- USB HID ----------------> host
+                              |
+                              +-- BLE HID ------------------> laptop / other BLE host
+                              |
+                              +-- BLE HID --> desktop dongle --> USB HID --> desktop
+```
+
+LEFT remains the ZMK Central in all normal operating modes. The desktop dongle is a BLE HID Central / USB HID bridge, not a ZMK Split Central. See `HOST_CONNECTIVITY_DECISION.md` for the detailed decision and rationale.
 
 ## MCU module
 
-Use Akizuki AE-HY0020-DIP (DIP20 / 300 mil / 2.54 mm pitch) for all three units.
+Preferred module for LEFT, RIGHT, and NUMPAD:
 
-The module should be removable. The keyboard PCB therefore uses a low-profile 20-pin 300 mil machine-pin / round-pin DIP socket rather than soldering the module permanently.
+- u-blox ANNA-B402-00B.
+- Nordic nRF52833 SoC.
+- 512 kB flash / 128 kB RAM.
+- 33 GPIO.
+- Native USB device support.
+- Integrated 2.4 GHz antenna and RF matching.
+- Approx. 6.5 x 6.5 x 1.2 mm.
 
-Placement goal:
+Reasons for selecting ANNA-B402 over the earlier HY0020 concept:
 
-- Keep the PCB outline within the key outline as much as practical.
-- Use hot-swap socket orientation (180 deg first, 90/270 deg only where useful) to create a central electronics pocket below the key field.
-- Reserve that central electronics pocket for the AE-HY0020-DIP and its surrounding electronics; the battery does not need to occupy this pocket.
-- Verify vertical clearance in 3D before PCB release.
+- Native USB enables USB HID on LEFT and NUMPAD without changing MCU family.
+- 128 kB RAM gives substantially more ZMK headroom than the 64 kB nRF52832 baseline.
+- GPIO count comfortably exceeds the RIGHT requirement of 14 matrix GPIO + 2 I2C GPIO.
+- The module remains compact enough for the central electronics pocket.
+- Antenna/RF integration remains module-level, avoiding a discrete RF design.
 
-## Switches
+Do not copy the old HY0020 pin assignment directly. Final ANNA pin allocation must be checked against the latest u-blox data sheet / System Integration Manual, including RESET, SWD, NFC, LFCLK, and RF-sensitive guidance.
+
+## Low-frequency clock
+
+ANNA-B402 already contains the high-frequency clock required by the SoC. For the 32.768 kHz low-frequency clock, the preferred direction is an external LFXO rather than relying on the internal LFRC for the final battery-powered design.
+
+Preferred baseline:
+
+- 32.768 kHz watch crystal.
+- Approximately 20 ppm class.
+- Connected to XL1 / XL2 (nRF52833 P0.00 / P0.01), making those pins unavailable as general GPIO.
+- Load capacitors selected from the chosen crystal load capacitance, ANNA pin capacitance, PCB stray capacitance, and the u-blox reference design.
+
+The u-blox EVK uses an external 32.768 kHz crystal and is the preferred reference starting point. The final crystal MPN and capacitor values remain to be locked before PCB release.
+
+Internal LFRC remains a valid fallback for bring-up, but it is not the preferred final low-power configuration because periodic calibration increases standby current.
+
+## USB
+
+Native nRF52833 USB is part of the ANNA baseline.
+
+- LEFT: USB HID + BLE HID + Split Central.
+- NUMPAD: USB HID + BLE HID standalone keyboard.
+- RIGHT: no direct host HID requirement; USB-C may still be present for charging / service as needed.
+
+USB VBUS, D+, and D- must be routed according to u-blox / Nordic guidance. Include appropriate ESD protection in the final PCB design.
+
+## Key matrices and GPIO budget
+
+Current matrix sizes:
+
+- LEFT: 30 keys, 5 x 6 matrix, 11 matrix GPIO.
+- RIGHT: 43 keys, 5 x 9 matrix, 14 matrix GPIO.
+- NUMPAD: approximately 20-27 keys; 5 x 6 remains the provisional matrix envelope until the layout is finalized.
+
+Shared I2C requires 2 additional GPIO. The current ANNA board scaffold uses:
+
+- SDA: P0.11.
+- SCL: P0.12.
+
+These assignments are provisional until the final per-unit pin table is reviewed against the ANNA documentation and PCB layout.
+
+LEFT additionally requires dock-detect inputs for RIGHT and NUMPAD. Prefer active-low detection with pull-ups and GPIO interrupts so continuous polling is unnecessary.
+
+## Switches and mechanical layout
 
 - MX-compatible hot-swap is mandatory.
-- JLCPCB Economic PCBA is preferred.
-- Hot-swap sockets and SMT electronics should be concentrated on one assembly side where practical.
+- Keep the external PCB silhouette within the key-layout outline as much as practical.
+- Use hot-swap footprint rotation to create central electronics space; 180 degrees is the first choice, with 90/270 degrees only where useful.
+- Re-evaluate the central electronics pocket using the actual ANNA-B402, nPM1100, BQ27427, PCA9633, USB protection, and connector footprints.
+- The battery does not have to fit inside the electronics pocket.
 
 ## Battery
 
-Preferred common battery candidate for LEFT, RIGHT and NUMPAD:
+Preferred common battery candidate for LEFT, RIGHT, and NUMPAD remains:
 
 - DATA POWER DTP443442(NTC).
 - 1-cell LiPo, nominal 3.7 V.
 - 640 mAh.
 - Approx. 44 x 35 x 4.6 mm.
-- Built-in overcharge, over-discharge and over-current protection.
-- Integrated 10 kOhm NTC thermistor.
-- JST ZH-series 3-pin plug (ZHR-3): + / NTC / -.
-- Replaceable battery; use a mating keyed 3-pin board connector and explicitly verify polarity.
+- Integrated protection.
+- Integrated 10 kOhm NTC.
+- Replaceable battery with keyed 3-pin connection; verify final connector polarity explicitly.
 
-Battery placement is independent of the central electronics pocket. The preferred mechanical concept is to mount the flat pouch cell below the keyboard PCB in a dedicated bottom-case cavity, positioned wherever there is sufficient vertical clearance and mechanical protection. It may extend under multiple key positions as long as it does not interfere with hot-swap sockets, stabilizers, fasteners, pogo hardware, or the AE-HY0020 antenna region.
+Battery placement is a case-level mechanical problem rather than a primary MCU-placement constraint. It may sit below multiple key positions as long as there is adequate protection from hot-swap sockets, stabilizers, screws, solder tails, and other sharp or unsupported hardware.
 
-Do not place screws, sharp solder tails, socket pins, or unsupported PCB features directly against the LiPo pouch. Provide a rigid floor or tray plus electrical insulation between the battery and PCB hardware. Avoid placing the LiPo directly below the HY0020 antenna unless RF testing confirms that the pouch cell does not materially degrade performance.
-
-This battery is preferred over the earlier 500 mAh target because the 4.6 mm thickness is useful for a low-profile keyboard while still increasing capacity. It is also sold through Japanese electronics distributors.
-
-The nPM1100 supports battery thermal protection through its NTC pin and is designed around a 10 kOhm battery thermistor. Before PCB release, verify the exact thermistor B-constant in the selected battery against the nPM1100 requirement. The PCB should provide an assembly option so the nPM1100 NTC input can use either the pack NTC or the manufacturer's recommended fixed-resistor fallback, but never both at once.
-
-Use the same battery in all three units initially for part commonality. Change LEFT capacity only if measured runtime later justifies it.
+Avoid placing conductive structures immediately in the ANNA antenna keep-out / counterpoise region unless RF testing supports the arrangement.
 
 ## Power management
 
-Preferred PMIC: Nordic nPM1100-QDAA-R.
+Preferred PMIC remains Nordic nPM1100.
 
-Target configuration:
+Target functions:
 
-- 1-cell LiPo charger.
-- 3.0 V buck output for AE-HY0020-DIP and peripherals.
-- About 100 mA charge current as the starting point.
-- Use the battery-pack NTC for charger thermal protection if its thermistor curve is verified compatible.
-- USB-C is power/charging only; no USB data is required by HY0020.
+- 1-cell LiPo charging.
+- Power path.
+- 3.0 V buck rail for ANNA-B402 and peripherals.
+- Battery-pack NTC support if the selected pack curve is compatible.
 
-Each unit has its own LiPo and nPM1100.
+Each keyboard unit has its own LiPo and PMIC.
 
-LEFT USB VBUS may supply 5 V to RIGHT and NUMPAD through pogo contacts, but LEFT battery power must never be boosted/exported to the other units.
+LEFT USB VBUS may supply 5 V to RIGHT and NUMPAD through protected/current-limited pogo branches. LEFT battery power must not be boosted and exported to the other units.
+
+RIGHT and NUMPAD must isolate local USB 5 V and pogo 5 V so neither source back-feeds the other. Schottky OR remains the simple baseline unless later efficiency measurements justify an active power mux / ideal-diode solution.
 
 ## Battery gauge
 
-Preferred fuel gauge: TI BQ27427 family.
+Preferred fuel gauge remains TI BQ27427 family.
 
 Reasons:
 
-- Standard Zephyr Sensor API driver path compatible with ZMK battery reporting.
-- No custom ZMK fuel-gauge adapter should be required.
-- Shared I2C bus with the RGB driver.
+- Zephyr `ti,bq274xx` support is available.
+- Keep battery reporting on the standard Zephyr Sensor API path.
+- Avoid a custom ZMK fuel-gauge adapter.
+- Share the I2C bus with the RGB driver.
 
-Final design-capacity, taper-current and terminate-voltage values must be matched to the actual selected LiPo before hardware release. The current design-capacity target is 640 mAh if DTP443442(NTC) is retained.
+Final design capacity, taper current, terminate voltage, and battery thermistor details must be matched to the final LiPo before release.
 
 ## RGB status
 
-Preferred Economic-oriented candidate: NXP PCA9633 family.
+RIGHT RGB remains mandatory.
 
-- I2C LED driver.
-- Three channels used for RGB, fourth channel reserved.
-- Upstream Zephyr LED driver available.
-- Hardware blink support can reduce periodic MCU wakeups for status indication.
+Preferred current direction:
 
-The RGB/status function is mandatory on RIGHT as well as LEFT/NUMPAD.
+- NXP PCA9633 family.
+- I2C 4-channel LED driver.
+- Three channels for RGB, one spare.
+- Use upstream Zephyr LED support where practical.
 
-## I2C
+Supply availability and exact JLC part number must be rechecked before ordering.
 
-Use the shared I2C bus for:
+## Docking / pogo
 
-- BQ27427 fuel gauge.
-- RGB LED driver.
+Pogo signals are limited to:
 
-Current planned HY0020 pins:
+- GND.
+- Optional second GND.
+- USB-derived 5 V.
+- Dock detect.
+- Optional reserve contact if mechanically useful.
 
-- P0.28: SDA.
-- P0.30: SCL.
+Do not transport keyboard data over pogo.
 
-RIGHT therefore consumes all 16 available GPIO when combined with its 5x9 matrix.
+Do not implement runtime wired/BLE split switching based on docking state.
 
-## Dock detection
+## Desktop dongle
 
-LEFT planned detect inputs:
+A dedicated desktop dongle is part of the intended user experience, but it does not change the keyboard split topology.
 
-- P0.09: RIGHT_DET.
-- P0.10: NUMPAD_DET.
+Preferred behavior:
 
-Prefer active-low detection with pull-up and GPIO interrupt so no continuous polling is needed.
+- Keyboard side remains standard BLE HID.
+- Dongle acts as BLE HID Central and forwards reports to the desktop over USB HID.
+- A Prospector-like display can be added later.
+- If the display needs information not present in HID/Battery Service, add the smallest practical status channel, preferably a small custom BLE GATT service.
 
-## Pogo power
-
-LEFT USB VBUS export branches:
-
-- one protected/current-limited branch to RIGHT,
-- one protected/current-limited branch to NUMPAD.
-
-A programmable/current-limited load switch such as TPS2553 is the current preferred concept for each branch.
-
-RIGHT and NUMPAD must isolate local USB 5 V and pogo 5 V so neither source can back-feed the other. A simple Schottky-diode OR is the current baseline unless later efficiency measurements justify an active ideal-diode/power-mux solution.
+Nordic nRF Desktop is a candidate reference/base for the BLE-to-USB bridge. ESB is not part of the current baseline and should only be reconsidered if measurements show a concrete latency or reliability benefit that justifies the extra maintenance.
 
 ## JLCPCB manufacturing target
 
 Preferred production path:
 
-- JLCPCB Economic PCBA wherever possible.
-- AE-HY0020-DIP installed after PCBA because the module itself is not required to be SMT-assembled by JLCPCB.
-- Low-profile DIP socket for the AE-HY0020-DIP is through-hole/manual assembly.
-- Battery connector may also be manually installed if the preferred JST ZH mating header is not economical for PCBA.
-- Prefer 0603 passives unless space forces smaller parts.
-- Keep all SMT components on one assembly side when possible to stay compatible with Economic assembly constraints.
+- JLCPCB Economic PCBA wherever practical.
+- Single-sided SMT placement where possible.
+- Concentrate auto-assembled SMD parts on one assembly side.
+- ANNA-B402 is machine-assembled by JLCPCB; do not plan on hand-soldering the LGA module for the production prototype set.
+- ANNA-B402 JLC part C6124130 is currently listed as Economic and Standard capable and requires X-ray inspection.
+- Global Sourcing is the preferred procurement direction for ANNA-B402 unless the direct JLC stock / Pre-Order economics improve.
+- Required production quantity is 5 each of LEFT, RIGHT, and NUMPAD = 15 installed ANNA modules. Source a small margin above 15 for assembly attrition; approximately 18-20 is the current planning range, with the final quantity determined by the JLC parts calculator / quote.
+- A combined LEFT + RIGHT + NUMPAD mouse-bite panel may be cost-effective, but panelization remains a quote-driven manufacturing decision rather than a hardware requirement.
+
+Prefer 0603 passives unless space or the reference design clearly favors smaller parts.
 
 ## Firmware design rules
 
-Keep custom ZMK work minimal:
+Keep custom ZMK work minimal.
 
-- Standard ZMK BLE split transport.
-- Standard ZMK BLE HID.
-- Standard ZMK Studio.
+Preferred order of implementation:
+
+1. Standard ZMK functionality.
+2. Devicetree / Kconfig + standard Zephyr drivers.
+3. Small external custom module only where necessary.
+
+Baseline:
+
+- Standard ZMK BLE split transport between RIGHT and LEFT.
+- Standard ZMK BLE HID from LEFT.
+- Standard ZMK USB HID from LEFT.
+- Standard ZMK USB/BLE HID on NUMPAD.
+- ZMK Studio on LEFT and NUMPAD as practical.
 - Standard Zephyr Sensor API for the fuel gauge.
 - Standard Zephyr LED API for RGB.
-- Only a thin external status module is acceptable for mapping ZMK battery/BLE/split/dock events to RGB indications.
-- No custom split transport, dynamic-central scheme, pogo key transport, or USB dongle.
+- Only a thin custom status module is acceptable for battery/BLE/dock/RGB policy.
 
-## Items still requiring physical validation
+Do not implement in the baseline:
 
-- AE-HY0020-DIP/socket height versus hot-swap sockets and bottom case.
-- Battery cavity location and 44 x 35 x 4.6 mm clearance under the PCB.
-- Separation of the LiPo pouch from sharp hardware and the HY0020 antenna region.
-- Exact battery NTC B-constant compatibility with nPM1100.
-- RF performance with the chosen plate/case materials.
-- Deep-sleep and wake behavior with Studio + split central.
+- dynamic ZMK Central election,
+- runtime LEFT <-> dongle Central switching,
+- custom ESB split transport,
+- runtime BLE Split <-> ESB Split switching,
+- pogo key-data transport,
+- custom I2C/UART split protocol.
+
+## Firmware repository state
+
+The `poc/anna-b402` branch already contains an `anna_b402` board scaffold with nRF52833, GPIO0/GPIO1, I2C, and native USB enabled.
+
+The branch is not yet fully migrated: `build.yaml` still contains HY0020 / nRF52832 jobs. CI must be converted to build `anna_b402` explicitly before ANNA validation results are considered authoritative.
+
+## Items still requiring validation
+
+- Final ANNA-B402 land pattern and JLC footprint review against u-blox recommendations.
+- Antenna keep-out / counterpoise implementation in each unit.
+- Final 32.768 kHz crystal and load-capacitor values.
+- Final GPIO allocation for LEFT, RIGHT, and NUMPAD.
+- LEFT USB + BLE + Split + Studio build and memory usage on nRF52833.
+- RIGHT BLE Split build.
+- NUMPAD USB/BLE standalone build.
 - Battery current and real runtime.
+- RF performance with the chosen plate, case, battery placement, and nearby metal.
+- Battery NTC compatibility with nPM1100.
 - Pogo voltage drop and contact reliability.
 - Final battery connector orientation and polarity.
-- Final JLCPCB/LCSC availability immediately before ordering.
+- Global Sourcing price/MOQ/lead-time immediately before ordering.
+- JLCPCB PCBA quote comparison for three separate designs versus a combined panel.
