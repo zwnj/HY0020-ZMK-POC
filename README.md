@@ -17,10 +17,14 @@ The purpose of this repository is to measure those constraints instead of estima
 
 ## Flash layout
 
-The HY0020 board definition currently uses:
+The HY0020 board definition uses:
 
 - `0x00000000` - `0x00077fff`: code partition, 480 KiB
 - `0x00078000` - `0x0007ffff`: settings/NVS storage, 32 KiB
+
+`CONFIG_USE_DT_CODE_PARTITION=y` is enabled so the linker actually limits application code to the 480 KiB code partition. This protects the final 32 KiB from application growth and leaves it reserved for settings/NVS.
+
+Earlier PoC builds reported percentages against the full 512 KiB device Flash because this Kconfig option was missing. The binaries were small enough that no actual overlap occurred, but those earlier percentages understated usage of the intended code partition. The table below normalizes all Flash percentages against the correct 480 KiB application budget.
 
 The PoC assumes direct SWD flashing and does not reserve space for a bootloader.
 
@@ -61,34 +65,47 @@ The NumPad physical layout is intentionally still undecided. The layout-independ
 
 ## Measured memory usage
 
-Measured with the repository's GitHub Actions memory workflow.
+Measured with the repository's GitHub Actions memory workflow. Flash percentages below use the production-intent 480 KiB code partition, not the full 512 KiB device Flash.
 
 | Build | Flash | RAM |
 | --- | ---: | ---: |
-| HY0020 left, Central + ZMK Studio, before 74HC595 | 50,076 B / 512 KiB (9.55%) | 16,230 B / 64 KiB (24.77%) |
-| HY0020 left, Central + ZMK Studio, with 74HC595 | 54,072 B / 512 KiB (10.31%) | 16,438 B / 64 KiB (25.08%) |
-| HY0020 right, Peripheral, before 74HC595 | 24,880 B / 512 KiB (4.75%) | 6,352 B / 64 KiB (9.69%) |
-| HY0020 right, Peripheral, with 74HC595 | 28,748 B / 512 KiB (5.48%) | 6,536 B / 64 KiB (9.97%) |
+| HY0020 left, Central + ZMK Studio, baseline | 50,076 B / 480 KiB (10.19%) | 16,230 B / 64 KiB (24.77%) |
+| HY0020 left, Central + ZMK Studio, + 74HC595 | 54,072 B / 480 KiB (11.00%) | 16,438 B / 64 KiB (25.08%) |
+| HY0020 left, Central + ZMK Studio, + 74HC595 + battery ADC | 56,308 B / 480 KiB (11.46%) | 16,686 B / 64 KiB (25.46%) |
+| HY0020 right, Peripheral, baseline | 24,880 B / 480 KiB (5.06%) | 6,352 B / 64 KiB (9.69%) |
+| HY0020 right, Peripheral, + 74HC595 | 28,748 B / 480 KiB (5.85%) | 6,536 B / 64 KiB (9.97%) |
+| HY0020 right, Peripheral, + 74HC595 + battery ADC | 31,496 B / 480 KiB (6.41%) | 6,776 B / 64 KiB (10.34%) |
 
 74HC595 cost in this configuration:
 
 - Left: +3,996 B Flash, +208 B RAM
 - Right: +3,868 B Flash, +184 B RAM
 
-Battery-voltage sensing has now been added to the PoC using `P0.30 / AIN6`. The memory table should be updated with the new measured values after the corresponding CI run completes.
+Battery-voltage sensing cost relative to the 74HC595-only build:
+
+- Left: +2,236 B Flash, +248 B RAM
+- Right: +2,748 B Flash, +240 B RAM
+
+Total increase from the original baseline to the current 74HC595 + battery-ADC build:
+
+- Left: +6,232 B Flash, +456 B RAM
+- Right: +6,616 B Flash, +424 B RAM
+
+The final validation run also confirmed that the HY0020 linker region is 480 KiB and that both `gpio_595.c` and `battery_voltage_divider.c` are actually compiled into the firmware. All four memory-workflow targets passed: both HY0020 builds and both nRF52832 DK reference builds.
 
 ## Interpretation
 
 The original risk was not an observed out-of-memory failure. It was uncertainty about whether nRF52832's 64 KiB RAM and 512 KiB Flash would leave enough practical headroom for ZMK.
 
-The measured result so far is substantially better than the conservative concern:
+The measured result is substantially better than the conservative concern:
 
-- The heaviest measured build uses about 25% of RAM.
-- About 49 KiB of RAM remains in the Central + Studio build at link time.
-- Flash usage remains close to 10% after adding the 74HC595 driver.
-- The 74HC595 itself has negligible RAM impact in this design.
+- The heaviest current build uses 25.46% of RAM.
+- 48,850 B, about 47.7 KiB, of RAM remains in the Central + Studio build at link time.
+- The heaviest current build uses only 11.46% of the actual 480 KiB application-code partition.
+- The final 32 KiB of Flash is now genuinely protected for settings/NVS by the linker configuration.
+- 74HC595 and battery-voltage sensing together add only 456 B of RAM on the heaviest side relative to the original baseline.
 
-Therefore memory capacity is not currently a reason to reject HY0020.
+Therefore neither RAM nor Flash/storage capacity is currently a reason to reject HY0020.
 
 The linker summary does not measure worst-case runtime stack high-water marks, so final hardware/firmware should still be tested on-device. However, the current static margin is large enough that HY0020 is considered a valid design choice.
 
@@ -103,6 +120,7 @@ Current direction:
 - Keep matrix input rows directly connected to HY0020 GPIOs.
 - Use the shared power/battery block described in `docs/power-hardware.md`.
 - Reserve P0.30 / AIN6 for battery voltage measurement.
+- Reserve the final 32 KiB of internal Flash for settings/NVS.
 - Do not optimize around MCU-module footprint unless the product requirements change.
 
 ## Remaining validation
